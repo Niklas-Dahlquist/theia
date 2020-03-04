@@ -4,6 +4,7 @@
 
 Breaking changes:
 
+- [core] Renamed the `browser-menu-plugin.ts` module to `browser-main-menu-factory.ts`.
 - [scm][git] the History view (GitHistoryWidget) has moved from the git package to a new   package, scm-extra, and
   renamed to ScmHistoryWidget.  GitNavigableListWidget has also moved.
   CSS classes have been moved renamed accordingly.  [6381](https://github.com/eclipse-theia/theia/pull/6381)

@@ -61,6 +61,8 @@ export class ElectronMainMenuFactory {
                 electron.remote.getCurrentWindow().setMenu(createdMenuBar);
             }
         });
+        const update = debounce(() => this.update(), 100);
+        menuProvider.onChanged(update);
     }
 
     createMenuBar(): Electron.Menu {
@@ -79,6 +81,17 @@ export class ElectronMainMenuFactory {
         const template = this.fillMenuTemplate([], menuModel, args);
 
         return electron.remote.Menu.buildFromTemplate(template);
+    }
+
+    update(): void {
+        const menu = this.createMenuBar();
+        const electronWindow = electron.remote.getCurrentWindow();
+        if (isOSX) {
+            electron.remote.Menu.setApplicationMenu(menu);
+        } else {
+            // Unix/Windows: Set the per-window menus
+            electronWindow.setMenu(menu);
+        }
     }
 
     protected fillMenuTemplate(items: Electron.MenuItemConstructorOptions[],

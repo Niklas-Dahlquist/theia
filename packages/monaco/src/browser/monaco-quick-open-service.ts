@@ -25,7 +25,7 @@ import { ContextKey } from '@theia/core/lib/browser/context-key-service';
 import { MonacoContextKeyService } from './monaco-context-key-service';
 import { QuickOpenHideReason } from '@theia/core/lib/common/quick-open-service';
 import { MonacoResolvedKeybinding } from './monaco-resolved-keybinding';
-import { BrowserMenuBarContribution } from '@theia/core/lib/browser/menu/browser-menu-plugin';
+import { BrowserMenuBarContribution } from '@theia/core/lib/browser/menu/browser-main-menu-factory';
 
 export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOpenControllerOpts {
     valueSelection?: Readonly<[number, number]>;

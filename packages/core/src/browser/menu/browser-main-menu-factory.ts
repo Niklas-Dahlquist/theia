@@ -16,7 +16,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { injectable, inject } from 'inversify';
+import { injectable, inject, postConstruct } from 'inversify';
 import { MenuBar, Menu as MenuWidget, Widget } from '@phosphor/widgets';
 import { CommandRegistry as PhosphorCommandRegistry } from '@phosphor/commands';
 import {
@@ -29,6 +29,7 @@ import { ContextKeyService } from '../context-key-service';
 import { ContextMenuContext } from './context-menu-context';
 import { waitForRevealed } from '../widgets';
 import { ApplicationShell } from '../shell';
+import debounce = require('lodash.debounce');
 
 export abstract class MenuBarWidget extends MenuBar {
     abstract activateMenu(label: string, ...labels: string[]): Promise<MenuWidget>;
@@ -47,11 +48,19 @@ export class BrowserMainMenuFactory {
     @inject(ContextMenuContext)
     protected readonly context: ContextMenuContext;
 
+    protected _menuBar: MenuBarWidget | undefined;
+
     constructor(
         @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry,
         @inject(KeybindingRegistry) protected readonly keybindingRegistry: KeybindingRegistry,
         @inject(MenuModelRegistry) protected readonly menuProvider: MenuModelRegistry
     ) { }
+
+    @postConstruct()
+    protected init(): void {
+        const update = debounce(() => this.update(), 100);
+        this.menuProvider.onChanged(update);
+    }
 
     createMenuBar(): MenuBarWidget {
         const menuBar = new DynamicMenuBarWidget();
@@ -62,7 +71,15 @@ export class BrowserMainMenuFactory {
             this.fillMenuBar(menuBar);
         });
         menuBar.disposed.connect(() => listener.dispose());
+        this._menuBar = menuBar;
         return menuBar;
+    }
+
+    protected update(): void {
+        if (this._menuBar) {
+            this._menuBar.clearMenus();
+            this.fillMenuBar(this._menuBar);
+        }
     }
 
     protected fillMenuBar(menuBar: MenuBarWidget): void {

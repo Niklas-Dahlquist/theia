@@ -77,19 +77,19 @@ export class ElectronMenuContribution implements FrontendApplicationContribution
 
     onStart(app: FrontendApplication): void {
         this.hideTopPanel(app);
-        this.setMenu();
+        this.factory.update();
         if (isOSX) {
             // OSX: Recreate the menus when changing windows.
             // OSX only has one menu bar for all windows, so we need to swap
             // between them as the user switches windows.
-            electron.remote.getCurrentWindow().on('focus', () => this.setMenu());
+            electron.remote.getCurrentWindow().on('focus', () => this.factory.update());
         }
         // Make sure the application menu is complete, once the frontend application is ready.
         // https://github.com/theia-ide/theia/issues/5100
         let onStateChange: Disposable | undefined = undefined;
         const stateServiceListener = (state: FrontendApplicationState) => {
             if (state === 'ready') {
-                this.setMenu();
+                this.factory.update();
             }
             if (state === 'closing_window') {
                 if (!!onStateChange) {
@@ -117,15 +117,6 @@ export class ElectronMenuContribution implements FrontendApplicationContribution
             } else {
                 child = itr.next();
             }
-        }
-    }
-
-    private setMenu(menu: electron.Menu = this.factory.createMenuBar(), electronWindow: electron.BrowserWindow = electron.remote.getCurrentWindow()): void {
-        if (isOSX) {
-            electron.remote.Menu.setApplicationMenu(menu);
-        } else {
-            // Unix/Windows: Set the per-window menus
-            electronWindow.setMenu(menu);
         }
     }
 
