@@ -80,6 +80,36 @@ export const TerminalConfigSchema: PreferenceSchema = {
             description: 'Controls whether text selected in the terminal will be copied to the clipboard.',
             type: 'boolean',
             default: false,
+        },
+        'terminal.integrated.shell.windows': {
+            description: 'Controls shell to use on Windows',
+            type: 'string',
+            default: '',
+        },
+        'terminal.integrated.shellArgs.windows': {
+            description: 'Controls shell arguments on Windows',
+            type: ['string', 'null'],
+            default: '',
+        },
+        'terminal.integrated.shell.osx': {
+            description: 'Controls shell to use on OSX',
+            type: 'string',
+            default: '',
+        },
+        'terminal.integrated.shellArgs.osx': {
+            description: 'Controls shell arguments on OSX',
+            type: ['string', 'null'],
+            default: '',
+        },
+        'terminal.integrated.shell.linux': {
+            description: 'Controls shell to use on Linux',
+            type: 'string',
+            default: '',
+        },
+        'terminal.integrated.shellArgs.linux': {
+            description: 'Controls shell arguments on Linux',
+            type: ['string', 'null'],
+            default: '',
         }
     }
 };
@@ -96,6 +126,12 @@ export interface TerminalConfiguration {
     'terminal.integrated.scrollback': number,
     'terminal.integrated.rendererType': TerminalRendererType,
     'terminal.integrated.copyOnSelection': boolean,
+    'terminal.integrated.shell.windows': string,
+    'terminal.integrated.shellArgs.windows': string[],
+    'terminal.integrated.shell.osx': string,
+    'terminal.integrated.shellArgs.osx': string[],
+    'terminal.integrated.shell.linux': string,
+    'terminal.integrated.shellArgs.linux': string[],
 }
 
 type FontWeight = 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';

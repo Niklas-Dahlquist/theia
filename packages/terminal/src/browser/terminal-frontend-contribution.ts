@@ -22,6 +22,7 @@ import {
     MenuContribution,
     MenuModelRegistry,
     isOSX,
+    OS,
     SelectionService,
     Emitter, Event
 } from '@theia/core/lib/common';
@@ -46,6 +47,9 @@ import { ContextKeyService } from '@theia/core/lib/browser/context-key-service';
 import { ColorContribution } from '@theia/core/lib/browser/color-application-contribution';
 import { ColorRegistry } from '@theia/core/lib/browser/color-registry';
 import { terminalAnsiColorMap } from './terminal-theme-service';
+import { TerminalPreferences } from './terminal-preferences';
+import { ILogger } from '@theia/core';
+import { ApplicationServer } from '@theia/core/lib/common/application-protocol';
 
 export namespace TerminalMenus {
     export const TERMINAL = [...MAIN_MENU_BAR, '7_terminal'];
@@ -135,11 +139,16 @@ export class TerminalFrontendContribution implements TerminalService, CommandCon
 
     constructor(
         @inject(ApplicationShell) protected readonly shell: ApplicationShell,
+        @inject(ApplicationServer) protected readonly appServer: ApplicationServer,
         @inject(ShellTerminalServerProxy) protected readonly shellTerminalServer: ShellTerminalServerProxy,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
         @inject(FileSystem) protected readonly fileSystem: FileSystem,
-        @inject(SelectionService) protected readonly selectionService: SelectionService
+        @inject(SelectionService) protected readonly selectionService: SelectionService,
+        @inject(TerminalPreferences) protected readonly preferences: TerminalPreferences,
     ) { }
+
+    @inject(ILogger)
+    protected readonly logger: ILogger;
 
     @inject(LabelProvider)
     protected readonly labelProvider: LabelProvider;
@@ -159,6 +168,8 @@ export class TerminalFrontendContribution implements TerminalService, CommandCon
     @inject(ContextKeyService)
     protected readonly contextKeyService: ContextKeyService;
 
+    protected backendOs: Promise<OS.Type>;
+
     @postConstruct()
     protected init(): void {
         this.shell.currentChanged.connect(() => this.updateCurrentTerminal());
@@ -173,6 +184,7 @@ export class TerminalFrontendContribution implements TerminalService, CommandCon
         const updateFocusKey = () => terminalFocusKey.set(this.shell.activeWidget instanceof TerminalWidget);
         updateFocusKey();
         this.shell.activeChanged.connect(updateFocusKey);
+        this.backendOs = this.appServer.getBackendOS();
     }
 
     protected _currentTerminal: TerminalWidget | undefined;
@@ -471,8 +483,27 @@ export class TerminalFrontendContribution implements TerminalService, CommandCon
     }
 
     async newTerminal(options: TerminalWidgetOptions): Promise<TerminalWidget> {
+        const os = await this.backendOs;
+        let shell: string;
+        let args: string[];
+        if (os === OS.Type.Windows) {
+            shell = this.preferences.get('terminal.integrated.shell.windows');
+            args = this.preferences.get('terminal.integrated.shellArgs.windows');
+        } else if (os === OS.Type.OSX) {
+            shell = this.preferences.get('terminal.integrated.shell.osx');
+            args = this.preferences.get('terminal.integrated.shellArgs.osx');
+        } else if (os === OS.Type.Linux) {
+            shell = this.preferences.get('terminal.integrated.shell.linux');
+            args = this.preferences.get('terminal.integrated.shellArgs.linux');
+        } else {
+            this.logger.trace('Undefined OS, creating default terminal: ${os}');
+            shell = '';
+            args = [''];
+        }
         const widget = <TerminalWidget>await this.widgetManager.getOrCreateWidget(TERMINAL_WIDGET_FACTORY_ID, <TerminalWidgetFactoryOptions>{
             created: new Date().toString(),
+            shellPath: shell,
+            shellArgs: args,
             ...options
         });
         return widget;
